@@ -14,20 +14,23 @@ function ticker(ms, cb) {
   let ticks = 0
 
   function tick () {
-    setTimeout(() => { emitter.emit('tick') }, 50)
-    ticks++
-    if (0 < ms) {
-      ms = ms - 50
-      tick()
+    if (0 >= ms) {
+      cb(ticks)
+    } else {
+      setTimeout(() => { 
+        emitter.emit('tick') 
+        ticks++
+        ms = ms - 50
+        tick()
+      }, 50)
     }
   }
 
   tick()
-  cb(ticks)
   return emitter
 }
 
-ticker(0, (ticks) => console.log('nr of ticks ' + ticks))
+ticker(51, (ticks) => console.log('nr of ticks ' + ticks))
   .on('tick', () => console.log('tickity tack'))
   .on('error', (e) => console.error(e.message))
 
