@@ -28,16 +28,21 @@ function concatFiles(dest, cb, ...files) {
 }
 
 function createTasks (dest, ...files) {
-  return files.map(file => (cb) => readFile(
-    new URL(file, import.meta.url),
-    (err, content) => {
-      if (err) return cb(err)
-      appendFile(new URL(dest, import.meta.url), content, (err) => {
-        if (err) return cb(err)
-        cb(null, 'appended ' + file)
-      })
-    })
-  )
+  return files.map(file => (cb) => read(file, (_err, content) => append(content, dest, cb)))
+}
+
+function read(file, cb) {
+  readFile(new URL(file, import.meta.url), (err, content) => {
+    if (err) return console.log(err)
+    cb(null, content)
+  })
+}
+
+function append(content, dest, cb) {
+  appendFile(new URL(dest, import.meta.url), content, (err) => {
+    if (err) return cb(err)
+    cb(null, 'appended to ' + dest)
+  })
 }
 
 concatFiles('test.txt', (err, res) => {
