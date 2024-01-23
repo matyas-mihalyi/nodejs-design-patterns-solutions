@@ -11,7 +11,6 @@ import { PassThrough, pipeline } from 'node:stream';
 import { createGzip, createDeflate, createBrotliCompress } from 'node:zlib';
 
 const src = createReadStream(process.argv[2]) // filename
-
 const gzip = createGzip()
 const deflate = createDeflate()
 const brotli = createBrotliCompress()
@@ -48,7 +47,7 @@ function compress() {
   for (const algorithm of Object.keys(algorithms)) {
     inProgress++
     pipeline(
-      src,
+      createReadStream(process.argv[2]),
       getOriginalSize(algorithm),
       setStartTime(algorithm),
       algorithms[algorithm].stream,
@@ -64,7 +63,7 @@ function compress() {
       if (--inProgress === 0) {
         console.table(algorithms, ['time', 'original', 'compressed'])
       }
-    });
+    })
   }
 }
 
