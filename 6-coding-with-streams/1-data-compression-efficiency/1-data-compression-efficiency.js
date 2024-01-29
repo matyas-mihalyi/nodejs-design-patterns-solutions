@@ -10,7 +10,6 @@ import { createReadStream, createWriteStream } from 'node:fs';
 import { PassThrough, pipeline } from 'node:stream';
 import { createGzip, createDeflate, createBrotliCompress } from 'node:zlib';
 
-const src = createReadStream(process.argv[2]) // filename
 const gzip = createGzip()
 const deflate = createDeflate()
 const brotli = createBrotliCompress()
