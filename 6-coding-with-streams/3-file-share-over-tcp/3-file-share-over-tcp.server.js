@@ -10,14 +10,47 @@ import { createWriteStream } from 'fs'
 import { createServer } from 'net'
 
 const server = createServer((socket) => { // access incoming data stream in requestListener
-  const dest = createWriteStream('dest.txt')
+  /**
+    * @type {Array<WritableStream>}
+    */
+  const destinations = []
+  let currentChannel = null
+  let currentLength = null
+  
   socket
-    .on('data', (c) => {
-      console.log(c)
-      dest.write(c)
+    .on('readable', () => {
+      /** 
+        * @type {Buffer}
+        */
+      let chunk
+      if (currentChannel === null) {
+        chunk = socket.read(1) // read first byte to get the channel
+        currentChannel = chunk && chunk.readUint8(0) // parse binary to Uint, now we have the channel
+      }
+      if (currentLength === null) {
+        chunk = socket.read(4)
+        currentLength = chunk && chunk.readUint32BE(0)
+        if (currentLength === null) {
+          return null
+        }
+      }
+      chunk = socket.read(currentLength)
+      console.log(chunk)
+      if (!destinations[currentChannel]) { // get filename first
+        destinations[currentChannel] = createWriteStream('./dest/' + chunk.toString())
+        currentChannel = null
+        currentLength = null
+        return null
+      }
+
+      destinations[currentChannel].write(chunk)
+      currentChannel = null
+      currentLength = null
     })
-    .on('end', () => dest.close())
-    // .pipe(createWriteStream('dest.txt'))
+    .on('end', () => {
+      destinations.forEach((dest) => {
+        dest.end()
+      })
+    }) 
 })
 server.listen(3000, () => console.log('Server listening'))
-// reads tcp and writes to file

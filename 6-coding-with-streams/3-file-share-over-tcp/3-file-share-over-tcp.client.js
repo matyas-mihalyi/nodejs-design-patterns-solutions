@@ -23,16 +23,17 @@ const socket = connect(3000, () => {
   * @param {Array<string>} sources
   * @param {WritableStream} destination
   */
-function multiplexChannels (files, destination) {
+function multiplexChannels(files, destination) {
   let openChannels = files.length
   for (let i = 0; i < files.length; i++) {
 
     // write channel and filename first
     const fileNameBuff = Buffer.from(getFileName(files[i]))
-    const buff = Buffer.alloc(1 + fileNameBuff.length)
+    const buff = Buffer.alloc(1 + 4 + fileNameBuff.length)
     const channel = i
     buff.writeUInt8(channel, 0)
-    fileNameBuff.copy(buff, 1)
+    buff.writeUInt32BE(fileNameBuff.length, 1)
+    fileNameBuff.copy(buff, 5)
     console.log(buff)
     destination.write(buff)
 
@@ -51,6 +52,7 @@ function multiplexChannels (files, destination) {
         }
       })
       .on('end', () => {                                      // (4)
+        console.log(openChannels)
         if (--openChannels === 0) {
           destination.end()
         }
